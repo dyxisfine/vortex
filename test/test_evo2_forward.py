@@ -26,19 +26,26 @@ def read_prompts(
     return promptseqs
 
 
-def test_dna_model(model, device="cuda:0"):
+def test_dna_model(model, device=None):
     """
     Test a DNA sequence model by comparing its predictions to the input sequence.
     Accuracy scores are the % correctly predicted tokens, we expect >80% for these prompts.
     
     Args:
         model_name (str): Name of the model to test
-        device (str): Device to run the model on (default: 'cuda:0')
+        device (str): Device to run the model on. Defaults to the best available device.
 
     Returns:
         tuple: (original sequence, predicted sequence, accuracy)
     """
     
+    if device is None:
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+        )
+
     sequences = read_prompts('./test/data/prompts.csv')
     losses = []
     accuracies = []
@@ -114,7 +121,8 @@ if __name__ == "__main__":
     )
 
     torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(1)
 
     args = parser.parse_args()
     assert any(model in path for model in ['evo2-40b-1m', 'evo2-7b-1m', 'evo2-1b-8k'] 

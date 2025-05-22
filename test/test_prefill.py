@@ -6,7 +6,8 @@ from src.utils import dotdict
 
 def test_long_prefill(pytestconfig):
     torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(1)
     # torch.cuda.memory._record_memory_history()
 
     seqlen = 2000
@@ -16,7 +17,11 @@ def test_long_prefill(pytestconfig):
     config.max_seqlen = seqlen
     # config.prefill_style = "recurrence"
     config.compile = False
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
 
     # fix the input
     x = torch.ones(1, seqlen, device=device, requires_grad=False, dtype=torch.long)
@@ -84,7 +89,8 @@ def test_long_prefill(pytestconfig):
 
 def test_recurrent_prefill(pytestconfig):
     torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(1)
     L = 128
 
     config_path = "./configs/sh-stem-test.yml"
@@ -93,7 +99,11 @@ def test_recurrent_prefill(pytestconfig):
     config.seqlen = L
     vocab_size = config.vocab_size
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
 
     x = torch.ones(1, L, device=device, requires_grad=False, dtype=torch.long)
 

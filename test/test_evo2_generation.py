@@ -29,12 +29,19 @@ def mid_point_split(*, seq, num_tokens):
     return prompt, target
 
 
-def generate_and_score(*, sequences, model, tokenizer, args, generations_per_prompt=5, device="cuda:0"):
+def generate_and_score(*, sequences, model, tokenizer, args, generations_per_prompt=5, device=None):
     """
     Prompt with first half, generate and score on 2nd half
     """
     import torch
     from vortex.model.generation import generate
+
+    if device is None:
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+        )
 
     scores = []
     prompts = []
@@ -112,7 +119,8 @@ def main():
     )
 
     torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(1)
 
     args = parser.parse_args()
     assert any(model in path for model in ['evo2-40b-1m', 'evo2-7b-1m', 'evo2-1b-8k'] 
@@ -131,7 +139,11 @@ def main():
     else:
         tokenizer = HFAutoTokenizer(config.vocab_file)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = (
+        torch.device("cuda:0")
+        if torch.cuda.is_available()
+        else torch.device("mps") if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else torch.device("cpu")
+    )
 
     m = StripedHyena(config)
 
@@ -144,7 +156,8 @@ def main():
         model=m,
         tokenizer=tokenizer,
         args=args,
-        generations_per_prompt=args.generations_per_prompt
+        generations_per_prompt=args.generations_per_prompt,
+        device=device,
     )
 
     print(scores)
