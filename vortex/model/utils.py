@@ -1,6 +1,18 @@
 import torch
 import logging
 
+
+def get_default_device(index: int = 0) -> str:
+    """Return the best available device string for the given index.
+
+    Prefers CUDA when available, otherwise falls back to MPS and finally CPU.
+    """
+    if torch.cuda.is_available():
+        return f"cuda:{index}"
+    if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 log = logging.getLogger(__name__)
 
 

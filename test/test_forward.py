@@ -33,7 +33,11 @@ def test_batched_forward(pytestconfig):
     vocab_size = config.vocab_size
     config
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     dtype = torch.float32
     input_ids = torch.randint(0, vocab_size, (1, 8), device=device)
     input_ids = input_ids.repeat(4, 1)
@@ -55,7 +59,11 @@ def test_batched_forward(pytestconfig):
 # TODO: parametrize for better coverage
 def test_custom_fftconv_siso(pytestconfig, dtype=torch.float16):
     L = 4096
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     fn = FlashFFTConv(2 * L, dtype=dtype).to(device)
 
     x = torch.randn(1, 1, L, dtype=dtype).to(device)
@@ -74,7 +82,11 @@ def test_custom_fftconv_siso(pytestconfig, dtype=torch.float16):
 
 def test_custom_fftconv_causality(pytestconfig, dtype=torch.float16):
     L = 4096
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     fn = FlashFFTConv(2 * L, dtype=dtype).to(device)
 
     x = torch.randn(1, 1, L, dtype=dtype, requires_grad=True).to(device)
@@ -92,7 +104,11 @@ def test_custom_fftconv_hsiso(pytestconfig, dtype=torch.float16):
     D = 16
     H = 4
     M = D // H
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     fn = FlashFFTConv(2 * L, dtype=dtype).to(device)
 
     k = torch.randn(1, D, L, dtype=dtype, device=device)

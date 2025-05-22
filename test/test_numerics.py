@@ -8,7 +8,11 @@ def test_aa_fp_error(pytestconfig):
     input_dim = 1000
     output_dim = 1000
     dtype = torch.bfloat16
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     linear = nn.Linear(input_dim, output_dim).to(device).to(dtype)
 
     x1 = torch.randn(1, input_dim)
@@ -31,7 +35,11 @@ def test_batched_norm(pytestconfig):
         "params_dtype": torch.float32,
         "use_flash_rmsnorm": True,
     }
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = (
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available() else "cpu"
+    )
     config = dotdict(config)
     rmsnorm = RMSNorm(config).to(device).to(torch.bfloat16)
 
